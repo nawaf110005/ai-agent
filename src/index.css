@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* allow long markdown lines to break */
+.break-words {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
