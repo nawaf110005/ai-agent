@@ -1,14 +1,21 @@
 @import "tailwindcss";
 
-/* allow long markdown lines to break */
-.break-words {
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
+/* Hide scrollbars */
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Wrap long lines */
+.break-words {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* ChatGPT-style background */
+body {
+  background-color: #202123;
 }

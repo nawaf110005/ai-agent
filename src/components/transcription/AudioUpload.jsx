@@ -1,5 +1,3 @@
-// src/components/transcription/AudioUpload.jsx
-
 import React, { useState } from 'react'
 import { Copy, UploadCloud } from 'lucide-react'
 import useTranscription from '../../hooks/useTranscription'
@@ -13,19 +11,13 @@ export default function AudioUpload() {
   const { apiKey, validateKey, clearKey } = useApp()
   const { transcript, loading, error, transcribe } = useTranscription()
   const [file, setFile] = useState(null)
-
-  // Modal for API key prompt
   const { isOpen, title, content, openModal, closeModal } = useModal()
-
-  const handleFileChange = e => {
-    setFile(e.target.files?.[0] || null)
-  }
 
   const handleSubmit = async e => {
     e.preventDefault()
     if (!apiKey) {
       openModal(
-        'OpenAI API Key Required',
+        'API Key Required',
         <APIKeyManager
           validateKey={validateKey}
           clearKey={clearKey}
@@ -36,33 +28,26 @@ export default function AudioUpload() {
       return
     }
     if (!file) {
-      toast.error('Please select an audio file first')
+      toast.error('Select an audio file first')
       return
     }
     try {
       await transcribe(file)
     } catch (err) {
-      toast.error(err.message || 'Transcription failed.')
-    }
-  }
-
-  const handleCopy = () => {
-    if (transcript) {
-      navigator.clipboard.writeText(transcript)
-      toast.success('Copied to clipboard!')
+      toast.error(err.message || 'Transcription failed')
     }
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-6">
       <form onSubmit={handleSubmit} className="flex items-center space-x-4">
-        <label className="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
+        <label className="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border rounded cursor-pointer">
           <UploadCloud className="mr-2" />
-          <span>{file ? file.name : 'Select audio file'}</span>
+          <span>{file?.name || 'Select audio file'}</span>
           <input
             type="file"
             accept="audio/*"
-            onChange={handleFileChange}
+            onChange={e => setFile(e.target.files[0] || null)}
             className="hidden"
           />
         </label>
@@ -70,38 +55,33 @@ export default function AudioUpload() {
           type="submit"
           disabled={loading}
           className={`px-4 py-2 rounded text-white ${
-            loading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-green-600 hover:bg-green-700'
+            loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'
           }`}
         >
           {loading ? 'Transcribing…' : 'Transcribe'}
         </button>
       </form>
 
-      {error && (
-        <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>
-      )}
+      {error && <p className="text-red-500">{error.message}</p>}
 
       {transcript && (
-        <div className="relative bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+        <div className="relative bg-white dark:bg-gray-700 border rounded-lg p-4">
           <button
-            onClick={handleCopy}
-            className="absolute top-2 right-2 p-1 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500"
-            title="Copy transcript"
+            onClick={() => {
+              navigator.clipboard.writeText(transcript)
+              toast.success('Copied!')
+            }}
+            className="absolute top-2 right-2 p-1 bg-gray-200 dark:bg-gray-600 rounded"
           >
             <Copy />
           </button>
-          {/* Hidden scrollbar via no-scrollbar */}
           <textarea
             readOnly
             value={transcript}
-            className="w-full h-64 bg-transparent resize-none focus:outline-none text-gray-900 dark:text-gray-100 overflow-y-auto no-scrollbar"
+            className="w-full h-64 resize-none bg-transparent focus:outline-none overflow-y-auto no-scrollbar"
           />
         </div>
       )}
-
-      {/* API-key modal if needed */}
       <Modal isOpen={isOpen} title={title} onClose={closeModal} hideClose>
         {content}
       </Modal>

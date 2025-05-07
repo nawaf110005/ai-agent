@@ -1,30 +1,43 @@
 // src/context/AppContext.jsx
+
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { createOpenaiClient } from '../services/openai'
 
 const AppContext = createContext()
-export const useApp = () => useContext(AppContext)
 
 export function AppProvider({ children }) {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('openaiKey') || '')
+  // Load any existing key from localStorage
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('apiKey') || '')
 
+  // Persist key (or remove) whenever it changes
   useEffect(() => {
-    if (apiKey) localStorage.setItem('openaiKey', apiKey)
-    else localStorage.removeItem('openaiKey')
+    if (apiKey) localStorage.setItem('apiKey', apiKey)
+    else localStorage.removeItem('apiKey')
   }, [apiKey])
 
-  const validateKey = async (key) => {
+  /**
+   * Attempt to validate a fresh API key.
+   * Returns true if OK, false otherwise.
+   */
+  const validateKey = async (candidateKey) => {
     try {
-      const client = createOpenaiClient(key)
+      // instantiate with the candidate
+      const client = createOpenaiClient(candidateKey)
+      // minimal test call
       await client.models.list()
-      setApiKey(key)
+      // if it succeeded, store it!
+      setApiKey(candidateKey)
       return true
-    } catch {
+    } catch (err) {
+      console.error('API key validation failed:', err)
       return false
     }
   }
 
-  const clearKey = () => setApiKey('')
+  // Clear out the saved key
+  const clearKey = () => {
+    setApiKey('')
+  }
 
   return (
     <AppContext.Provider value={{ apiKey, validateKey, clearKey }}>
@@ -32,3 +45,5 @@ export function AppProvider({ children }) {
     </AppContext.Provider>
   )
 }
+
+export const useApp = () => useContext(AppContext)
