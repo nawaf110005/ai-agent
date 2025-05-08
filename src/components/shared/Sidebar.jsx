@@ -1,5 +1,8 @@
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
+import { ThemeContext } from '../../context/ThemeContext'
+import LightLogo from '../../assets/logo.png'
+import DarkLogo from '../../assets/DarkLogo.png'
 
 export default function Sidebar({
   sessions,
@@ -7,100 +10,130 @@ export default function Sidebar({
   setActiveId,
   onDelete,
   onLogout,
-  mobileOpen,
-  setMobileOpen,
+  sidebarOpen,
+  setSidebarOpen,
   tab,
   setTab,
   startNew,
 }) {
+  const { darkMode } = useContext(ThemeContext)
+  const logoSrc = darkMode ? DarkLogo : LightLogo
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   return (
-    // On mobile: slide-in from left when mobileOpen, otherwise hidden.
-    // On md+ always flex.
-    <aside
-      className={`
-        fixed inset-y-0 left-0 z-40 transform
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0 md:static md:flex
-        transition-transform duration-200 ease-in-out
-        w-64 bg-[#343541] text-white flex flex-col
-      `}
-    >
-      {/* mobile close button */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700 md:hidden">
-        <span className="font-bold text-lg">Nawaf AI</span>
-        <button onClick={() => setMobileOpen(false)}>
-          <X className="w-5 h-5 text-gray-300 hover:text-white" />
-        </button>
-      </div>
+    <>
+      {/* BACKDROP */}
+      {sidebarOpen && (
+        <div
+          // z-40 sits below the sidebar (z-50), covers full screen
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-      {/* header for md+ */}
-      <div className="hidden md:flex px-4 py-4 items-center justify-between border-b border-gray-700">
-        <span className="font-bold text-lg">Nawaf AI</span>
-        <button
-          onClick={startNew}
-          className="text-gray-400 hover:text-white"
-          title="New chat"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* New Chat button for mobile */}
-      <button
-        onClick={startNew}
-        className="md:hidden flex items-center m-4 px-3 py-2 bg-[#444654] hover:bg-[#5e5e72] rounded text-sm font-medium"
+      {/* SIDEBAR */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 w-64 flex flex-col h-full
+          bg-white dark:bg-[#343541] text-gray-900 dark:text-white
+          transform transition-transform duration-200 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
       >
-        <Plus className="w-4 h-4 mr-2" /> New chat
-      </button>
-
-      {/* Chat list */}
-      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-2 no-scrollbar">
-        {sessions.map(s => (
-          <div key={s.id} className="flex items-center">
-            <button
-              onClick={() => {
-                setActiveId(s.id)
-                setTab('chat')
-                setMobileOpen(false)
-              }}
-              className={`flex-1 text-left px-3 py-2 rounded hover:bg-[#5e5e72] ${
-                s.id === activeId ? 'bg-[#565867]' : ''
-              }`}
-            >
-              <span className="truncate">{s.name}</span>
-            </button>
-            <Trash2
-              onClick={() => onDelete(s.id)}
-              className="w-4 h-4 text-gray-400 hover:text-red-500 ml-1"
-            />
-          </div>
-        ))}
-      </nav>
-
-      {/* Tabs and Logout */}
-      <div className="border-t border-gray-700 px-2 py-2 space-y-1">
-        {['chat', 'transcribe', 'profile'].map(t => (
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+          <img src={logoSrc} alt="Logo" className="h-8" />
           <button
-            key={t}
-            onClick={() => {
-              setTab(t)
-              setMobileOpen(false)
-            }}
-            className={`w-full text-left px-3 py-2 rounded hover:bg-[#5e5e72] ${
-              tab === t ? 'bg-[#565867]' : ''
-            }`}
+            onClick={() => isMobile && setSidebarOpen(false)}
+            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 md:hidden"
+            title="Close menu"
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            <X className="w-5 h-5 text-gray-900 dark:text-gray-300" />
           </button>
-        ))}
+        </div>
 
-        <button
-          onClick={onLogout}
-          className="w-full mt-2 px-3 py-2 text-left text-red-400 hover:text-red-600 hover:bg-[#3b3c4e] rounded"
-        >
-          Logout
-        </button>
-      </div>
-    </aside>
+        {/* New Chat */}
+{/* use the same wrapper classes as your bottom-bar */}
+<div className="px-2 py-2">
+  <button
+    onClick={() => {
+      startNew()
+      if (isMobile) setSidebarOpen(false)
+    }}
+    className="
+      w-full flex items-center justify-center
+      px-3 py-2
+      bg-indigo-600 hover:bg-indigo-700
+      text-white text-sm
+      rounded-md
+      transition-colors duration-200
+    "
+  >
+    <Plus className="w-4 h-4 mr-1.5" />
+    New chat
+  </button>
+</div>
+
+
+        {/* Session list */}
+        <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-2 no-scrollbar">
+          {sessions.map((s) => (
+            <div key={s.id} className="flex items-center">
+              <button
+                onClick={() => {
+                  setActiveId(s.id)
+                  setTab('chat')
+                  if (isMobile) setSidebarOpen(false)
+                }}
+                className={`
+                  flex-1 text-left px-3 py-2 rounded
+                  hover:bg-gray-100 dark:hover:bg-[#5e5e72]
+                  ${s.id === activeId ? 'bg-gray-200 dark:bg-[#565867]' : ''}
+                `}
+              >
+                <span className="truncate">{s.name}</span>
+              </button>
+              <Trash2
+                onClick={() => onDelete(s.id)}
+                className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-red-500 ml-1"
+              />
+            </div>
+          ))}
+        </nav>
+
+        {/* Bottom buttons */}
+        <div className="mt-auto border-t border-gray-200 dark:border-gray-700 px-2 py-2 space-y-1">
+          {['chat', 'transcribe', 'profile'].map((t) => (
+            <button
+              key={t}
+              onClick={() => {
+                setTab(t)
+                if (isMobile) setSidebarOpen(false)
+              }}
+              className={`
+                w-full text-left px-3 py-2 rounded
+                hover:bg-gray-100 dark:hover:bg-[#5e5e72]
+                ${tab === t ? 'bg-gray-200 dark:bg-[#565867]' : ''}
+              `}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+          <button
+            onClick={onLogout}
+            className="w-full px-3 py-2 text-left text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600 hover:bg-gray-100 dark:hover:bg-[#3b3c4e] rounded"
+          >
+            Logout
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }

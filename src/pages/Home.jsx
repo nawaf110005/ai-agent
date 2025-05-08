@@ -1,8 +1,10 @@
+// src/pages/Home.jsx
+
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
 
-import Navbar from '../components/shared/Navbar'
+import Navbar from '../components/shared/NavBar'
 import Sidebar from '../components/shared/Sidebar'
 import Modal from '../components/shared/Modal'
 
@@ -20,19 +22,20 @@ export default function Home() {
   const navigate = useNavigate()
   const { isOpen, title, content, hideClose, openModal, closeModal } = useModal()
 
-  const [mobileOpen, setMobileOpen] = useState(false)
+  // Sidebar + tabs + sessions
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tab, setTab] = useState('chat')
   const [sessions, setSessions] = useState(() => {
     const saved = localStorage.getItem('chatSessions')
     return saved ? JSON.parse(saved) : []
   })
-  const [activeId, setActiveId] = useState(() => {
-    return localStorage.getItem('activeSession') || ''
-  })
+  const [activeId, setActiveId] = useState(
+    () => localStorage.getItem('activeSession') || ''
+  )
 
-  // Persist sessions
+  // Persist sessions on change
   useEffect(() => {
-    if (sessions.length === 0) {
+    if (!sessions.length) {
       const id = uuidv4()
       setSessions([{ id, name: 'New Chat', messages: [] }])
       setActiveId(id)
@@ -45,15 +48,16 @@ export default function Home() {
     if (activeId) localStorage.setItem('activeSession', activeId)
   }, [activeId])
 
-  // Enforce API key
+  // Force-show the API-key modal until we have a valid apiKey
   useEffect(() => {
-    if (!apiKey) {
+    if (!apiKey && !isOpen) {
       setTab('profile')
       openModal(
         'Enter Your OpenAI API Key',
         <APIKeyManager
           validateKey={validateKey}
           clearKey={clearKey}
+          mode="validate"
           onSuccess={() => {
             closeModal()
             setTab('chat')
@@ -62,33 +66,38 @@ export default function Home() {
         { hideClose: true }
       )
     }
-  }, [apiKey])
+  }, [apiKey, isOpen, openModal, closeModal, setTab, validateKey, clearKey])
 
+  // Create a new chat session
   const startNew = () => {
     const id = uuidv4()
     setSessions(prev => [{ id, name: 'New Chat', messages: [] }, ...prev])
     setActiveId(id)
     setTab('chat')
-    setMobileOpen(false)
+    setSidebarOpen(false)
   }
 
+  // Delete a session with confirmation
   const handleDelete = id => {
     openModal(
       'Delete Chat?',
       <div>
-        <p>Are you sure you want to delete this chat?</p>
+        <p className="text-gray-900 dark:text-gray-100">
+          Are you sure you want to delete this chat?
+        </p>
         <div className="mt-4 flex justify-end space-x-2">
-          <button className="px-4 py-2 bg-gray-300 rounded" onClick={closeModal}>
+          <button
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-400 dark:hover:bg-gray-500"
+            onClick={closeModal}
+          >
             Cancel
           </button>
           <button
-            className="px-4 py-2 bg-red-600 text-white rounded"
+            className="px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded hover:bg-red-700"
             onClick={() => {
-              setSessions(prev => prev.filter(s => s.id !== id))
-              if (activeId === id) {
-                const rem = sessions.filter(s => s.id !== id)
-                setActiveId(rem[0]?.id || '')
-              }
+              const remaining = sessions.filter(s => s.id !== id)
+              setSessions(remaining)
+              if (activeId === id) setActiveId(remaining[0]?.id || '')
               closeModal()
             }}
           >
@@ -100,31 +109,37 @@ export default function Home() {
     )
   }
 
+  // Log out
   const handleLogout = async () => {
     await logOut()
     navigate('/login')
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar
         sessions={sessions}
         activeId={activeId}
         setActiveId={setActiveId}
         onDelete={handleDelete}
         onLogout={handleLogout}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
         tab={tab}
         setTab={setTab}
         startNew={startNew}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar onToggleSidebar={() => setMobileOpen(o => !o)} />
+      <div
+        className={`
+          flex flex-1 flex-col overflow-hidden
+          transition-all duration-200
+          ${sidebarOpen ? 'md:ml-64' : 'md:ml-0'}
+        `}
+      >
+        <Navbar onToggleSidebar={() => setSidebarOpen(o => !o)} />
 
-        {/* Content area */}
-        <div className="flex-1 flex overflow-hidden bg-[#202123]">
+        <div className="flex flex-1 overflow-hidden bg-gray-50 dark:bg-[#202123]">
           {tab === 'chat' && (
             <ChatInterface
               key={activeId}
@@ -138,16 +153,18 @@ export default function Home() {
             <APIKeyManager
               validateKey={validateKey}
               clearKey={clearKey}
-              onSuccess={() => {
-                closeModal()
-                setTab('chat')
-              }}
+              mode="manage"
             />
           )}
         </div>
       </div>
 
-      <Modal isOpen={isOpen} title={title} onClose={closeModal} hideClose={hideClose}>
+      <Modal
+        isOpen={isOpen}
+        title={title}
+        onClose={closeModal}
+        hideClose={hideClose}
+      >
         {content}
       </Modal>
     </div>

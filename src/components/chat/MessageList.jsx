@@ -1,17 +1,18 @@
-// src/components/chat/MessageList.jsx
-
-import React from 'react'
+import React, { useContext } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Copy } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
+import { ThemeContext } from '../../context/ThemeContext'
+import LightLogo from '../../assets/logo.png'
+import DarkLogo from '../../assets/DarkLogo.png'
 
 export default function MessageList({ messages }) {
   const { currentUser } = useAuth()
+  const { darkMode } = useContext(ThemeContext)
   const userAvatar = currentUser?.photoURL
-  const botAvatar =
-    'https://localo.com/de/assets/img/definitions/what-is-bot.webp'
+  const botAvatar = darkMode ? DarkLogo : LightLogo
 
   const components = {
     code({ node, inline, className, children, ...props }) {
@@ -74,9 +75,7 @@ export default function MessageList({ messages }) {
 
               {/* Message bubble */}
               <div
-                className={`relative ${
-                  isUser ? 'px-3 py-3' : 'pt-8 px-3 pb-3'
-                } break-words ${
+                className={`relative ${isUser ? 'px-3 py-3' : 'pt-8 px-3 pb-3'} break-words ${
                   isUser
                     ? 'bg-purple-600 text-white rounded-bl-2xl rounded-tl-2xl rounded-tr-2xl'
                     : 'bg-blue-100 dark:bg-blue-800 text-gray-900 dark:text-gray-100 rounded-br-2xl rounded-tr-2xl rounded-tl-2xl'

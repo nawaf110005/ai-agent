@@ -19,12 +19,12 @@ export default function Modal({ isOpen, title, children, onClose, hideClose }) {
         <div>{children}</div>
         {!hideClose && (
           <div className="mt-6 text-right">
-            <button
+            {/* <button
               onClick={onClose}
               className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
             >
               OK
-            </button>
+            </button> */}
           </div>
         )}
       </div>

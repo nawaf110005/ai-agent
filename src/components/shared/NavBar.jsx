@@ -1,38 +1,36 @@
-// src/components/shared/Navbar.jsx
-import React, { useEffect, useState } from 'react'
-import { Sun, Moon, Menu } from 'lucide-react'
+import React, { useContext } from 'react'
+import { Menu, Sun, Moon } from 'lucide-react'
+import { ThemeContext } from '../../context/ThemeContext'
 
 export default function Navbar({ onToggleSidebar }) {
-  // initialize based on saved preference or default to dark
-  const [dark, setDark] = useState(() => {
-    const stored = localStorage.getItem('theme')
-    if (stored === 'light') return false
-    return true
-  })
-
-  useEffect(() => {
-    const root = window.document.documentElement
-    if (dark) root.classList.add('dark')
-    else root.classList.remove('dark')
-    localStorage.setItem('theme', dark ? 'dark' : 'light')
-  }, [dark])
+  const { darkMode, toggle } = useContext(ThemeContext)
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-[#343541] text-gray-100">
-      <button className="md:hidden" onClick={onToggleSidebar}>
-        <Menu className="w-6 h-6 text-gray-100" />
-      </button>
-      <h1 className="text-lg font-semibold">Nawaf AI</h1>
+    <header className="
+      flex items-center justify-between
+      px-4 py-3
+      bg-white text-gray-900 border-b border-gray-200
+      dark:bg-[#343541] dark:text-gray-100 dark:border-gray-700
+    ">
       <button
-        onClick={() => setDark(d => !d)}
-        className="p-2 rounded hover:bg-gray-600"
+        onClick={onToggleSidebar}
+        className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600"
+        title="Toggle menu"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
+      <h1 className="text-lg font-semibold">Nawaf AI</h1>
+
+      <button
+        onClick={toggle}
+        className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
         title="Toggle dark/light"
       >
-        {dark ? (
-          <Sun className="w-5 h-5 text-yellow-400" />
-        ) : (
-          <Moon className="w-5 h-5 text-gray-200" />
-        )}
+        {darkMode
+          ? <Sun className="w-5 h-5 text-yellow-400" />
+          : <Moon className="w-5 h-5 text-gray-600" />
+        }
       </button>
     </header>
   )

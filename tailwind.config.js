@@ -1,8 +1,14 @@
-// tailwind.config.cjs
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // Enable class-based dark mode
   darkMode: 'class',
-  content: ['index.html', './src/**/*.{js,jsx,ts,tsx}'],
-  theme: { extend: {} },
-  plugins: [require('@tailwindcss/forms')],
+  // Specify where Tailwind should look for class usage
+  content: [
+    './index.html',
+    './src/**/*.{js,jsx,ts,tsx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
 }

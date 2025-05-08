@@ -1,8 +1,6 @@
+// src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { auth } from '../config/firebase'
 import {
-  setPersistence,
-  browserLocalPersistence,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
@@ -11,34 +9,43 @@ import {
   signOut,
   sendPasswordResetEmail,
   updateProfile,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth'
+import { auth } from '../config/firebase'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext()
+export const useAuth = () => useContext(AuthContext)
 
 export function AuthContextProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null)
+  const [currentUser, setCurrentUser] = useState(() => {
+    const u = localStorage.getItem('user')
+    return u ? JSON.parse(u) : false
+  })
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Persist auth in localStorage
-    setPersistence(auth, browserLocalPersistence).catch(console.error)
-
+    setPersistence(auth, browserLocalPersistence)
     const unsub = onAuthStateChanged(auth, user => {
-      setCurrentUser(
-        user
-          ? { email: user.email, displayName: user.displayName, photoURL: user.photoURL }
-          : null
-      )
+      if (user) {
+        const { email, displayName, photoURL } = user
+        const u = { email, displayName, photoURL }
+        setCurrentUser(u)
+        localStorage.setItem('user', JSON.stringify(u))
+      } else {
+        setCurrentUser(false)
+        localStorage.removeItem('user')
+      }
     })
     return unsub
   }, [])
 
-  const createUser = async (email, password, displayName) => {
+  const createUser = async (email, pass, name) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
-      await updateProfile(auth.currentUser, { displayName })
+      await createUserWithEmailAndPassword(auth, email, pass)
+      await updateProfile(auth.currentUser, { displayName: name })
       toast.success('Registered!')
       navigate('/')
     } catch (e) {
@@ -46,9 +53,9 @@ export function AuthContextProvider({ children }) {
     }
   }
 
-  const signIn = async (email, password) => {
+  const signIn = async (email, pass) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      await signInWithEmailAndPassword(auth, email, pass)
       toast.success('Logged in!')
       navigate('/')
     } catch (e) {
@@ -58,9 +65,9 @@ export function AuthContextProvider({ children }) {
 
   const signUpProvider = async () => {
     try {
-      const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
-      toast.success('Google login!')
+      const p = new GoogleAuthProvider()
+      await signInWithPopup(auth, p)
+      toast.success('Google sign-in!')
       navigate('/')
     } catch (e) {
       toast.error(e.message)
@@ -69,13 +76,13 @@ export function AuthContextProvider({ children }) {
 
   const logOut = async () => {
     await signOut(auth)
-    toast.info('Logged out')
+    toast.success('Logged out')
   }
 
   const forgotPassword = async email => {
     try {
       await sendPasswordResetEmail(auth, email)
-      toast.info('Reset email sent')
+      toast.warn('Reset email sent')
     } catch (e) {
       toast.error(e.message)
     }
@@ -89,5 +96,3 @@ export function AuthContextProvider({ children }) {
     </AuthContext.Provider>
   )
 }
-
-export const useAuth = () => useContext(AuthContext)

@@ -1,22 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { toast } from 'react-toastify'
-import { Copy } from 'lucide-react'
+import React, { useEffect, useState, useRef } from 'react'
 import useChat from '../../hooks/useChat'
 import { createOpenaiClient } from '../../services/openai'
 import { useApp } from '../../context/AppContext'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
+import { toast } from 'react-toastify'
 
 export default function ChatInterface({ sessions, setSessions, activeId }) {
   const { apiKey } = useApp()
   const session = sessions.find(s => s.id === activeId) || { messages: [], name: '' }
   const { messages, sendMessage } = useChat(session.messages)
-  const [titleSet, setTitleSet] = useState(false)
+  const [didSummarize, setDidSummarize] = useState(false)
   const containerRef = useRef()
 
   // Reset summary flag on session change
   useEffect(() => {
-    setTitleSet(false)
+    setDidSummarize(false)
   }, [activeId])
 
   // Persist messages back into sessions
@@ -36,11 +35,10 @@ export default function ChatInterface({ sessions, setSessions, activeId }) {
   // Generate chat-summary title once, after the first assistant response
   useEffect(() => {
     const hasAssistant = messages.some(m => m.role === 'assistant')
-    const isDefaultName =
-      !session.name || session.name.startsWith('New Chat')
+    const isDefaultName = !session.name || session.name.startsWith('New Chat')
 
-    if (hasAssistant && !titleSet && apiKey && isDefaultName) {
-      setTitleSet(true)
+    if (hasAssistant && !didSummarize && apiKey && isDefaultName) {
+      setDidSummarize(true)
 
       ;(async () => {
         try {
@@ -56,27 +54,29 @@ export default function ChatInterface({ sessions, setSessions, activeId }) {
               }
             ]
           })
-          const summary = res.choices[0].message.content
+          const summaryText = res.choices[0].message.content
             .trim()
             .split('\n')[0]
-            .slice(0, 50)
+            .slice(0, 50) || 'Chat'
 
-          // Update session name
-          setSessions(prev =>
-            prev.map(s =>
-              s.id === activeId
-                ? { ...s, name: summary || 'Chat' }
-                : s
+          // Animate title letter by letter
+          let built = ''
+          for (const ch of summaryText) {
+            built += ch
+            await new Promise(r => setTimeout(r, 50))
+            setSessions(prev =>
+              prev.map(s =>
+                s.id === activeId ? { ...s, name: built } : s
+              )
             )
-          )
+          }
         } catch (err) {
           console.error('Summary generation failed:', err)
         }
       })()
     }
-  }, [messages, apiKey, activeId, session.name, setSessions, titleSet])
+  }, [messages, apiKey, activeId, session.name, setSessions, didSummarize])
 
-  // Wrap sendMessage to include timestamp and to auto-toast any errors
   const handleSend = async content => {
     try {
       await sendMessage(content)
@@ -87,15 +87,12 @@ export default function ChatInterface({ sessions, setSessions, activeId }) {
 
   return (
     <div className="flex flex-col flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden m-4">
-      {/* Chat history */}
       <div
         ref={containerRef}
         className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900 space-y-6 no-scrollbar"
       >
         <MessageList messages={messages} />
       </div>
-
-      {/* Fixed input at bottom */}
       <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
         <MessageInput onSend={handleSend} />
       </div>
