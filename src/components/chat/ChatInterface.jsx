@@ -9,30 +9,27 @@ import { toast } from 'react-toastify'
 export default function ChatInterface({ sessions, setSessions, activeId }) {
   const { apiKey } = useApp()
   const session = sessions.find(s => s.id === activeId) || { messages: [], name: '' }
-  const { messages, sendMessage } = useChat(session.messages)
+  const { messages, sendMessage, loading: isChatLoading } = useChat(session.messages)
   const [didSummarize, setDidSummarize] = useState(false)
+  const [isSending, setIsSending] = useState(false)
   const containerRef = useRef()
 
-  // Reset summary flag on session change
   useEffect(() => {
     setDidSummarize(false)
   }, [activeId])
 
-  // Persist messages back into sessions
   useEffect(() => {
     setSessions(prev =>
       prev.map(s => (s.id === activeId ? { ...s, messages } : s))
     )
   }, [messages, activeId, setSessions])
 
-  // Auto-scroll on new message
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight
     }
   }, [messages])
 
-  // Generate chat-summary title once, after the first assistant response
   useEffect(() => {
     const hasAssistant = messages.some(m => m.role === 'assistant')
     const isDefaultName = !session.name || session.name.startsWith('New Chat')
@@ -59,7 +56,6 @@ export default function ChatInterface({ sessions, setSessions, activeId }) {
             .split('\n')[0]
             .slice(0, 50) || 'Chat'
 
-          // Animate title letter by letter
           let built = ''
           for (const ch of summaryText) {
             built += ch
@@ -79,9 +75,12 @@ export default function ChatInterface({ sessions, setSessions, activeId }) {
 
   const handleSend = async content => {
     try {
+      setIsSending(true)
       await sendMessage(content)
     } catch (err) {
       toast.error(err.message)
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -91,10 +90,10 @@ export default function ChatInterface({ sessions, setSessions, activeId }) {
         ref={containerRef}
         className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900 space-y-6 no-scrollbar"
       >
-        <MessageList messages={messages} />
+        <MessageList messages={messages} isSending={isSending} />
       </div>
       <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
-        <MessageInput onSend={handleSend} />
+        <MessageInput onSend={handleSend} isSending={isSending} isChatLoading={isChatLoading} />
       </div>
     </div>
   )

@@ -8,7 +8,7 @@ import { ThemeContext } from '../../context/ThemeContext'
 import LightLogo from '../../assets/logo.png'
 import DarkLogo from '../../assets/DarkLogo.png'
 
-export default function MessageList({ messages }) {
+export default function MessageList({ messages, isSending }) {
   const { currentUser } = useAuth()
   const { darkMode } = useContext(ThemeContext)
   const userAvatar = currentUser?.photoURL
@@ -68,12 +68,9 @@ export default function MessageList({ messages }) {
             )}
 
             <div className="flex flex-col max-w-[70%]">
-              {/* Timestamp at top */}
               <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 self-start">
                 {m.timestamp}
               </span>
-
-              {/* Message bubble */}
               <div
                 className={`relative ${isUser ? 'px-3 py-3' : 'pt-8 px-3 pb-3'} break-words ${
                   isUser
@@ -81,7 +78,6 @@ export default function MessageList({ messages }) {
                     : 'bg-blue-100 dark:bg-blue-800 text-gray-900 dark:text-gray-100 rounded-br-2xl rounded-tr-2xl rounded-tl-2xl'
                 }`}
               >
-                {/* Copy AI response button */}
                 {!isUser && (
                   <button
                     onClick={() => {
@@ -111,6 +107,20 @@ export default function MessageList({ messages }) {
           </div>
         )
       })}
+
+      {isSending && (
+        <div className="flex justify-start items-end">
+          <img
+            src={botAvatar}
+            alt="Bot"
+            className="w-8 h-8 rounded-full mr-2 self-end"
+          />
+          <div className="bg-blue-100 dark:bg-blue-800 text-gray-900 dark:text-gray-100 rounded-br-2xl rounded-tr-2xl rounded-tl-2xl px-3 pt-8 pb-3 max-w-[70%] animate-pulse">
+            <span className="inline-block w-16 h-4 bg-gray-300 dark:bg-gray-600 rounded mb-1"></span>
+            <span className="inline-block w-32 h-4 bg-gray-300 dark:bg-gray-600 rounded"></span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
