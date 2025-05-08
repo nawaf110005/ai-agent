@@ -1,29 +1,20 @@
-import React, { createContext, useState, useEffect } from 'react'
+import React, { useState, useEffect, createContext } from 'react'
 
-export const ThemeContext = createContext({
-  darkMode: false,
-  toggle: () => {},
-})
+export const ThemeContext = createContext()
 
-export function ThemeProvider({ children }) {
-  const [darkMode, setDarkMode] = useState(false)
+export const ThemeProvider = ({ children }) => {
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem('darkMode')
+    return stored === null ? false : stored === 'true'
+  })
 
-  // On mount, load stored preference or system default
   useEffect(() => {
-    const stored = localStorage.getItem('theme')
-    if (stored === 'dark' || stored === 'light') {
-      setDarkMode(stored === 'dark')
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
     } else {
-      setDarkMode(
-        window.matchMedia('(prefers-color-scheme: dark)').matches
-      )
+      document.documentElement.classList.remove('dark')
     }
-  }, [])
-
-  // Apply/remove 'dark' class on <html> and persist
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode)
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light')
+    localStorage.setItem('darkMode', darkMode.toString())
   }, [darkMode])
 
   const toggle = () => setDarkMode(prev => !prev)

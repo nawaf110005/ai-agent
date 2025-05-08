@@ -1,5 +1,3 @@
-// src/pages/Home.jsx
-
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
@@ -11,6 +9,7 @@ import Modal from '../components/shared/Modal'
 import ChatInterface from '../components/chat/ChatInterface'
 import AudioUpload from '../components/transcription/AudioUpload'
 import APIKeyManager from '../components/profile/APIKeyManager'
+import APIKeySetup from '../components/profile/APIKeySetup'
 
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
@@ -20,9 +19,16 @@ export default function Home() {
   const { logOut } = useAuth()
   const { apiKey, validateKey, clearKey } = useApp()
   const navigate = useNavigate()
-  const { isOpen, title, content, hideClose, openModal, closeModal } = useModal()
+  const {
+    isOpen,
+    title,
+    content,
+    hideClose,
+    openModal,
+    closeModal,
+    forceCloseModal,
+  } = useModal()
 
-  // Sidebar + tabs + sessions
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tab, setTab] = useState('chat')
   const [sessions, setSessions] = useState(() => {
@@ -33,7 +39,6 @@ export default function Home() {
     () => localStorage.getItem('activeSession') || ''
   )
 
-  // Persist sessions on change
   useEffect(() => {
     if (!sessions.length) {
       const id = uuidv4()
@@ -43,32 +48,26 @@ export default function Home() {
     localStorage.setItem('chatSessions', JSON.stringify(sessions))
   }, [sessions])
 
-  // Persist active session
   useEffect(() => {
     if (activeId) localStorage.setItem('activeSession', activeId)
   }, [activeId])
 
-  // Force-show the API-key modal until we have a valid apiKey
   useEffect(() => {
     if (!apiKey && !isOpen) {
-      setTab('profile')
       openModal(
         'Enter Your OpenAI API Key',
-        <APIKeyManager
+        <APIKeySetup
           validateKey={validateKey}
-          clearKey={clearKey}
-          mode="validate"
           onSuccess={() => {
-            closeModal()
+            forceCloseModal()
             setTab('chat')
           }}
         />,
         { hideClose: true }
       )
     }
-  }, [apiKey, isOpen, openModal, closeModal, setTab, validateKey, clearKey])
+  }, [apiKey, isOpen, openModal, forceCloseModal, setTab, validateKey])
 
-  // Create a new chat session
   const startNew = () => {
     const id = uuidv4()
     setSessions(prev => [{ id, name: 'New Chat', messages: [] }, ...prev])
@@ -77,7 +76,6 @@ export default function Home() {
     setSidebarOpen(false)
   }
 
-  // Delete a session with confirmation
   const handleDelete = id => {
     openModal(
       'Delete Chat?',
@@ -109,7 +107,6 @@ export default function Home() {
     )
   }
 
-  // Log out
   const handleLogout = async () => {
     await logOut()
     navigate('/login')
@@ -151,9 +148,9 @@ export default function Home() {
           {tab === 'transcribe' && <AudioUpload />}
           {tab === 'profile' && (
             <APIKeyManager
-              validateKey={validateKey}
+              promptValidate={validateKey}
               clearKey={clearKey}
-              mode="manage"
+              apiKey={apiKey}
             />
           )}
         </div>

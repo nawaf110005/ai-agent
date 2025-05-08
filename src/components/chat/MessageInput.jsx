@@ -19,7 +19,7 @@ export default function MessageInput({ onSend, isSending, isChatLoading }) {
         value={text}
         onChange={e => setText(e.target.value)}
         placeholder={isChatLoading ? 'Loading conversation…' : isSending ? 'Waiting for reply…' : 'Type your message…'}
-        className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none"
+        className="flex-1 px-4 py-2 bg-gray-100 text-black dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none"
         disabled={isSending || isChatLoading}
       />
       <button

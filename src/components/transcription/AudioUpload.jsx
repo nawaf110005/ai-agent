@@ -22,7 +22,7 @@ export default function AudioUpload() {
           validateKey={validateKey}
           clearKey={clearKey}
           onSuccess={closeModal}
-        />,
+        />, 
         { hideClose: true }
       )
       return
@@ -39,52 +39,55 @@ export default function AudioUpload() {
   }
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
-      <form onSubmit={handleSubmit} className="flex items-center space-x-4">
-        <label className="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border rounded cursor-pointer">
-          <UploadCloud className="mr-2" />
-          <span>{file?.name || 'Select audio file'}</span>
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={e => setFile(e.target.files[0] || null)}
-            className="hidden"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={loading}
-          className={`px-4 py-2 rounded text-white ${
-            loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'
-          }`}
-        >
-          {loading ? 'Transcribing…' : 'Transcribe'}
-        </button>
-      </form>
-
-      {error && <p className="text-red-500">{error.message}</p>}
-
-      {transcript && (
-        <div className="relative bg-white dark:bg-gray-700 border rounded-lg p-4">
+    <div className="w-full px-4 pt-4 pb-6 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-inner">
+      <div className="max-w-2xl mx-auto space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row justify-center items-center sm:space-x-4 space-y-4 sm:space-y-0">
+          <label className="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer transition hover:bg-gray-200 dark:hover:bg-gray-600">
+            <UploadCloud className="mr-2" />
+            <span>{file?.name || 'Select audio file'}</span>
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={e => setFile(e.target.files[0] || null)}
+              className="hidden"
+            />
+          </label>
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(transcript)
-              toast.success('Copied!')
-            }}
-            className="absolute top-2 right-2 p-1 bg-gray-200 dark:bg-gray-600 rounded"
+            type="submit"
+            disabled={loading}
+            className={`px-5 py-2 rounded-xl text-white transition ${
+              loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'
+            }`}
           >
-            <Copy />
+            {loading ? 'Transcribing…' : 'Transcribe'}
           </button>
-          <textarea
-            readOnly
-            value={transcript}
-            className="w-full h-64 resize-none bg-transparent focus:outline-none overflow-y-auto no-scrollbar"
-          />
-        </div>
-      )}
-      <Modal isOpen={isOpen} title={title} onClose={closeModal} hideClose>
-        {content}
-      </Modal>
+        </form>
+
+        {error && <p className="text-red-500 text-sm text-center">{error.message}</p>}
+
+        {transcript && (
+          <div className="relative bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl p-4 shadow">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(transcript)
+                toast.success('Copied!')
+              }}
+              className="absolute top-2 right-2 p-1 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500"
+            >
+              <Copy className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+            </button>
+            <textarea
+              readOnly
+              value={transcript}
+              className="w-full h-64 resize-none bg-transparent text-gray-800 dark:text-white focus:outline-none overflow-y-auto no-scrollbar"
+            />
+          </div>
+        )}
+
+        <Modal isOpen={isOpen} title={title} onClose={closeModal} hideClose>
+          {content}
+        </Modal>
+      </div>
     </div>
   )
 }

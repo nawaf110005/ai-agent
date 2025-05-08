@@ -1,20 +1,52 @@
-import { useState, useCallback } from 'react'
+import { useReducer, useCallback } from 'react'
+
+const initialState = {
+  isOpen: false,
+  title: '',
+  content: null,
+  hideClose: false,
+}
+
+function modalReducer(state, action) {
+  switch (action.type) {
+    case 'OPEN':
+      return {
+        isOpen: true,
+        title: action.payload.title,
+        content: action.payload.content,
+        hideClose: action.payload.hideClose || false,
+      }
+    case 'CLOSE':
+      return state.hideClose ? state : { ...state, isOpen: false }
+    case 'FORCE_CLOSE':
+      return { ...state, isOpen: false }
+    default:
+      return state
+  }
+}
 
 export default function useModal() {
-  const [modalProps, setModalProps] = useState({
-    isOpen: false,
-    title: '',
-    content: null,
-    hideClose: false,
-  })
+  const [state, dispatch] = useReducer(modalReducer, initialState)
 
   const openModal = useCallback((title, content, options = {}) => {
-    setModalProps({ isOpen: true, title, content, hideClose: options.hideClose || false })
+    dispatch({
+      type: 'OPEN',
+      payload: { title, content, hideClose: options.hideClose },
+    })
   }, [])
 
   const closeModal = useCallback(() => {
-    setModalProps(prev => (prev.hideClose ? prev : { ...prev, isOpen: false }))
+    dispatch({ type: 'CLOSE' })
   }, [])
 
-  return { ...modalProps, openModal, closeModal }
+  const forceCloseModal = useCallback(() => {
+    dispatch({ type: 'FORCE_CLOSE' })
+  }, [])
+
+  return {
+    ...state,
+    openModal,
+    closeModal,
+    forceCloseModal,
+  }
 }
