@@ -5,7 +5,7 @@ import { Copy } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
 import { ThemeContext } from '../../context/ThemeContext'
-import LightLogo from '../../assets/logo.png'
+import LightLogo from '../../assets/Logo.png'
 import DarkLogo from '../../assets/DarkLogo.png'
 
 export default function MessageList({ messages, isSending }) {
