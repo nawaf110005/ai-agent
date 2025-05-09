@@ -22,7 +22,7 @@ This project is part of the **“Software Development – From Saudi Arabia to G
 
 ## 🛠️ Tech Stack
 
-* **Frontend**: React 19, Vite 6, Tailwind CSS 4
+* **Frontend**: React 19, Vite 6, Tailwind CSS 3
 * **Routing**: React Router 7
 * **State Management**: React Context + useReducer
 * **Data Fetching**: TanStack Query (React Query)
