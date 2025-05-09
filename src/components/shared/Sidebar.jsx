@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import { ThemeContext } from '../../context/ThemeContext'
-import LightLogo from '../../assets/logo.png'
+import LightLogo from '../../assets/Logo.png'
 import DarkLogo from '../../assets/DarkLogo.png'
 
 export default function Sidebar({
