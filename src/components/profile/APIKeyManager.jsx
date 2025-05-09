@@ -1,13 +1,15 @@
 import React, { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, X } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 export default function APIKeyManager({ apiKey, clearKey, promptValidate, onSuccess }) {
   const [inputKey, setInputKey] = useState(apiKey || '')
   const [loading, setLoading] = useState(false)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [editing, setEditing] = useState(false)
   const [showKey, setShowKey] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const isModified = inputKey.trim() !== (apiKey || '').trim()
 
   const handleUpdate = async () => {
     const trimmed = inputKey.trim()
@@ -22,11 +24,7 @@ export default function APIKeyManager({ apiKey, clearKey, promptValidate, onSucc
       if (success) {
         localStorage.setItem('openai_api_key', trimmed)
         toast.success('API key updated.')
-        if (onSuccess) {
-          setTimeout(() => {
-            onSuccess()
-          }, 100)
-        }
+        if (onSuccess) setTimeout(() => onSuccess(), 100)
         setEditing(false)
       } else {
         toast.error('Invalid API key.')
@@ -40,20 +38,11 @@ export default function APIKeyManager({ apiKey, clearKey, promptValidate, onSucc
   }
 
   const handleDelete = () => {
-    if (!confirmingDelete) {
-      setConfirmingDelete(true)
-      return
-    }
     clearKey()
     toast.info('Key deleted')
     promptValidate()
     setEditing(false)
-  }
-
-  const handleCancel = () => {
-    setInputKey(apiKey || '')
-    setEditing(false)
-    setConfirmingDelete(false)
+    setShowDeleteModal(false)
   }
 
   return (
@@ -62,9 +51,8 @@ export default function APIKeyManager({ apiKey, clearKey, promptValidate, onSucc
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Manage your OpenAI API Key
         </h2>
-
         <p className="text-gray-700 dark:text-gray-300">
-          You can get your API key by visiting{' '}
+          You can get your API key from{' '}
           <a
             href="https://platform.openai.com/account/api-keys"
             target="_blank"
@@ -88,7 +76,16 @@ export default function APIKeyManager({ apiKey, clearKey, promptValidate, onSucc
             </button>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="relative p-4 bg-gray-100 dark:bg-gray-800 rounded-xl shadow space-y-4">
+            {/* Close button */}
+            <button
+              onClick={() => setEditing(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500 dark:text-gray-300 dark:hover:text-red-400"
+              title="Cancel"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               API Key:
             </label>
@@ -98,40 +95,64 @@ export default function APIKeyManager({ apiKey, clearKey, promptValidate, onSucc
                 value={inputKey}
                 onChange={e => setInputKey(e.target.value)}
                 placeholder="sk-..."
-                className="w-full px-4 py-2 pr-10 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 pr-10 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="button"
                 onClick={() => setShowKey(prev => !prev)}
-                className="absolute right-2 top-1.5 text-gray-500 dark:text-gray-300"
+                className="absolute right-2 top-2 text-gray-500 dark:text-gray-300"
               >
                 {showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 pt-2">
+
+            {/* Action buttons */}
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={handleUpdate}
-                disabled={loading}
-                className={`flex-1 py-2 rounded-xl text-white transition ${
-                  loading ? 'bg-green-400' : 'bg-green-600 hover:bg-green-700'
+                disabled={!isModified || loading}
+                className={`text-sm px-4 py-1.5 rounded-lg text-white transition ${
+                  !isModified
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : loading
+                    ? 'bg-green-400'
+                    : 'bg-green-600 hover:bg-green-700'
                 }`}
               >
-                {loading ? 'Validating…' : 'Save'}
+                {loading ? 'Validating…' : !isModified ? 'No Changes' : 'Save'}
               </button>
               <button
-                onClick={handleDelete}
-                className={`flex-1 py-2 rounded-xl text-white transition ${
-                  confirmingDelete ? 'bg-red-800' : 'bg-red-600 hover:bg-red-700'
-                }`}
+                onClick={() => setShowDeleteModal(true)}
+                className="text-sm px-4 py-1.5 rounded-lg text-white bg-red-600 hover:bg-red-700"
               >
-                {confirmingDelete ? 'Are you sure?' : 'Delete'}
+                Delete
               </button>
-              <button
-                onClick={handleCancel}
-                className="flex-1 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Cancel
-              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl w-full max-w-md">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete API Key?</h3>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Are you sure you want to delete your OpenAI API key? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 rounded-xl text-white bg-red-600 hover:bg-red-700"
+                >
+                  Confirm Delete
+                </button>
+              </div>
             </div>
           </div>
         )}

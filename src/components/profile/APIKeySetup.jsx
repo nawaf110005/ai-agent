@@ -34,9 +34,6 @@ export default function APIKeySetup({ onSuccess, validateKey }) {
 
   return (
     <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-        Enter Your OpenAI API Key
-      </h2>
       <p className="text-gray-700 dark:text-gray-300 mb-4">
         You can get your key from the{' '}
         <a
