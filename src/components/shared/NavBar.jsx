@@ -20,7 +20,7 @@ export default function Navbar({ onToggleSidebar }) {
         <Menu className="w-6 h-6" />
       </button>
 
-      <h1 className="text-lg font-semibold">Nawaf AI</h1>
+      <h1 className="text-lg font-semibold">NawafGPT</h1>
 
       <button
         onClick={toggle}
